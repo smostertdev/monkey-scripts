@@ -16,14 +16,14 @@
 })();
 
 var orders = [];
-var reqs = [];
+var reqs = [];     // hold HTTP request for order details page
 
 var tracking_url = "https://track.aliexpress.com/logisticsdetail.htm?tradeId="
 
 // Loop through each order
 $(".order-item-wraper").each((ind, el)=>{
     var products = [];
-    var hasTracking = $(el).find(".button-logisticsTracking ").length > 0;
+    var has_tracking = $(el).find(".button-logisticsTracking ").length > 0;
     inum = 0;
 
     // Retrieve each product
@@ -46,10 +46,10 @@ $(".order-item-wraper").each((ind, el)=>{
     let order = {
         id: $(el).find(".order-info .first-row .info-body ").text().trim(),
         status: $(el).find(".order-status .f-left").text().trim(),
-        orderPrice: $(el).find(".amount-num").text().trim(),
-	    orderDate: $(el).find(".order-info .second-row .info-body").text().trim(),
-	    sellerName: $(el).find(".store-info .first-row .info-body").text().trim(),
-        hasTracking: hasTracking,
+        order_price: $(el).find(".amount-num").text().trim(),
+	    order_date: $(el).find(".order-info .second-row .info-body").text().trim(),
+	    seller_name: $(el).find(".store-info .first-row .info-body").text().trim(),
+        has_tracking: has_tracking,
         products: products,
     };
 
@@ -91,10 +91,10 @@ $('<button/>', {
             order.products.forEach(product => {
                 s += order.id + "\t";
                 s += order.status + "\t";
-                s += order.orderPrice + "\t";
-                s += order.orderDate + "\t";
-                s += order.sellerName + "\t";
-                s += order.hasTracking + "\t";
+                s += order.order_price + "\t";
+                s += order.order_date + "\t";
+                s += order.seller_name + "\t";
+                s += order.has_tracking + "\t";
                 s += product.product_name + "\t";
                 s += "https:" + product.product_url + "\t";
                 s += "https:" + product.product_snapshot + "\t";

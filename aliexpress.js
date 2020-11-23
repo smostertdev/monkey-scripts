@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Aliexpress_items
+// @name         Aliexpress_orders
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  try to take over the world!
+// @version      0.2
+// @description  Export orders from aliexpress
 // @author       You
 // @match        https://trade.aliexpress.com/orderList.htm*
 // @grant        unsafeWindow
@@ -13,24 +13,26 @@
 
 (function() {
     'use strict';
-
-
 })();
 
 var orders = [];
-var items = [];
 var reqs = [];
+
+var tracking_url = "https://track.aliexpress.com/logisticsdetail.htm?tradeId="
+
+// Loop through each order
 $(".order-item-wraper").each((ind, el)=>{
     var products = [];
     var hasTracking = $(el).find(".button-logisticsTracking ").length > 0;
     inum = 0;
 
+    // Retrieve each item
     $(el).find(".order-body").each((i,e)=>{
         $(e).find(".product-sets").each((i,e)=>{
             let item = {
                 item_name: $(e).find(".product-title").text().trim(),
                 item_url: $(e).find(".product-title .baobei-name").attr('href'),
-		item_snapshot: $(e).find(".product-snapshot .baobei-name").attr('href'),
+		        item_snapshot: $(e).find(".product-snapshot .baobei-name").attr('href'),
                 item_price: $(e).find(".product-amount span:first()").text().trim(), // remove parcer for different currency
                 item_amount: $(e).find(".product-amount span:eq(1)").text().trim().slice(1),
                 item_num: ++inum,
@@ -40,95 +42,67 @@ $(".order-item-wraper").each((ind, el)=>{
                 order_date: $(el).find(".order-info .second-row .info-body").text().trim(),
                 seller_name: $(el).find(".store-info .first-row .info-body").text().trim(),
                 hasTracking: hasTracking,
-
             };
             products.push(item);
-            items.push(item);
-              //   console.log(item);
+            //console.log(item);
         });
-        //  console.log(products);
+        //console.log(products);
     });
 
     let order = {
         id: $(el).find(".order-info .first-row .info-body ").text().trim(),
         status: $(el).find(".order-status .f-left").text().trim(),
         orderPrice: $(el).find(".amount-num").text().trim(),
-    productPriceAndAmount: $(el).find(".product-right .product-amount").text().trim().replace(/(?:\s\s)/g, ""),
+        productPriceAndAmount: $(el).find(".product-right .product-amount").text().trim().replace(/(?:\s\s)/g, ""),
         productsNames: products.map((it)=> it.title).join(", "),
-	orderDate: $(el).find(".order-info .second-row .info-body").text().trim(),
-	sellerName: $(el).find(".store-info .first-row .info-body").text().trim(),
+	    orderDate: $(el).find(".order-info .second-row .info-body").text().trim(),
+	    sellerName: $(el).find(".store-info .first-row .info-body").text().trim(),
         hasTracking: hasTracking,
         products: products,
     };
-    if (hasTracking){
-        var req = new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: "GET",
-                url: "https://ilogisticsaddress.aliexpress.com/ajax_logistics_track.htm?orderId=" + order.id + "&callback=test",
-                onload:(data)=>{
-                    order.tracking = eval(data.responseText).tracking;
-                    order.trackingNumber = order.tracking.map(it=>it.mailNo).join(", ");
-                    resolve(order);
-                    orders.push(order);
-                },
-                onerror: () => reject(400)
-            });
-        });
-        reqs.push(req);
-    } else{
-        orders.push(order);
-    }
+
+    orders.push(order);
 });
 
 
-$.when.apply(null, reqs).done(function(){
-    //   console.log(orders);
-    // console.log(orders.length);
-});
-//<button id="search-btn" class="ui-button ui-button-primary search-btn" type="button">Search</button>
-
-
-$('#mybutton').one('click', function(){
-    var r=$('<input/>').attr({
-        type: "button",
-        id: "field",
-        value: 'LOAD CSV'
-    });
-    $("body").append(r);
-});
 $('<button/>', {
-    text: "LOAD", //set text 1 to 10
+    text: "LOAD",
     id: 'csvBtn',
     click: function () {
         $("#csvBtn").text("Loading...");
-        Promise.all(reqs).then(o =>{
-            var s = "";
+        var s = "";
 
-            items.forEach(e=> {
-                //console.log(e);
-                s += e.order_id + "\t";
-                s += e.item_num + "\t";
-                s += e.item_name + "\t";
-                s += "https:" + e.item_url + "\t";
-                s += "https:" + e.item_snapshot + "\t";
-                s += e.order_status + "\t";
-                s += e.item_price + "\t";
-		s += e.item_amount + "\t";
-                s += "https://trade.aliexpress.com/order_detail.htm?orderId=" + e.order_id + "\t";
-                s += e.order_date + "\t";
-                s += e.seller_name;
+        orders.forEach(order=> {
 
+            order.products.forEach(product => {
+                s += order.id + "\t";
+                s += order.status + "\t";
+                s += order.orderPrice + "\t";
+                s += order.productPriceAndAmount + "\t";
+                s += order.productsNames + "\t";
+                s += order.orderDate + "\t";
+                s += order.sellerName + "\t";
+                s += order.hasTracking + "\t";
+                s += product.item_name + "\t";
+                s += "https:" + product.item_url + "\t";
+                s += "https:" + product.item_snapshot + "\t";
+                s += product.item_price + "\t";
+                s += product.item_amount + "\t";
+                s += product.item_num + "\t";
+                s += product.order_id + "\t";
+                s += product.order_status + "\t";
+                s += product.order_price + "\t";
+                s += product.order_date + "\t";
+                s += product.seller_name + "\t";
+                s += product.hasTracking + "\t";
                 s += "\n";
-
-            });
-            //console.log(s);
-            GM_setClipboard (s);
-            $("#csvBtn").text("Loaded to clipboard");
+            })
         });
+
+        //console.log(s);
+        GM_setClipboard (s);
+        $("#csvBtn").text("Loaded to clipboard");
 
 
     }
 }).appendTo("#appeal-alert");
-
-
-function test(data){ return data;}

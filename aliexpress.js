@@ -3,13 +3,17 @@
 // @namespace    http://tampermonkey.net/
 // @version      0.5
 // @description  Export orders from aliexpress
-// @author       You
+// @author       naixx
 // @match        https://trade.aliexpress.com/orderList.htm*
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
 // @require      https://code.jquery.com/jquery-3.5.1.min.js
 // ==/UserScript==
+
+// Edited from:
+//https://gist.github.com/naixx/9929f308bfc0aac649d7c48c4a510737
+
 
 (function() {
     'use strict';

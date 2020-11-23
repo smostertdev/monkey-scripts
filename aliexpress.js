@@ -25,6 +25,7 @@ var reqs = [];     // hold HTTP request for order details page
 var tracking_url = "https://track.aliexpress.com/logisticsdetail.htm?tradeId="
 var details_url = "https://trade.aliexpress.com/order_detail.htm?orderId="
 
+// Load order details page to pull shipping cost, coupons, etc
 function get_order_details(order_id) {
     console.log("get_order_details: " + order_id);
 

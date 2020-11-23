@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aliexpress_orders
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.5
 // @description  Export orders from aliexpress
 // @author       You
 // @match        https://trade.aliexpress.com/orderList.htm*
@@ -70,7 +70,7 @@ $(".order-item-wraper").each((ind, el)=>{
             let product = {
                 product_name: $(e).find(".product-title").text().trim(),
                 product_url: $(e).find(".product-title .baobei-name").attr('href'),
-		        product_snapshot: $(e).find(".product-snapshot .baobei-name").attr('href'),
+                product_snapshot: $(e).find(".product-snapshot .baobei-name").attr('href'),
                 product_price: $(e).find(".product-amount span:first()").text().trim(), // remove parcer for different currency
                 product_quantity: $(e).find(".product-amount span:eq(1)").text().trim().slice(1),
                 product_num: ++inum,
@@ -90,8 +90,8 @@ $(".order-item-wraper").each((ind, el)=>{
         id: order_id,
         status: $(el).find(".order-status .f-left").text().trim(),
         order_price: $(el).find(".amount-num").text().trim(),
-	    order_date: $(el).find(".order-info .second-row .info-body").text().trim(),
-	    seller_name: $(el).find(".store-info .first-row .info-body").text().trim(),
+        order_date: $(el).find(".order-info .second-row .info-body").text().trim(),
+        seller_name: $(el).find(".store-info .first-row .info-body").text().trim(),
         has_tracking: has_tracking,
         products: products,
         details: "fetching",

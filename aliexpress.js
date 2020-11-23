@@ -8,7 +8,7 @@
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
-// @require http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
+// @require      https://code.jquery.com/jquery-3.5.1.min.js
 // ==/UserScript==
 
 (function() {
@@ -19,6 +19,42 @@ var orders = [];
 var reqs = [];     // hold HTTP request for order details page
 
 var tracking_url = "https://track.aliexpress.com/logisticsdetail.htm?tradeId="
+var details_url = "https://trade.aliexpress.com/order_detail.htm?orderId="
+
+function get_order_details(order_id) {
+    console.log("get_order_details: " + order_id);
+
+    return new Promise((resolve, reject) => {
+        console.log("loading: " + order_id);
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: details_url + order_id,
+            onload: (response) => {
+
+                details_parsed = jQuery.parseHTML(response.responseText);
+
+                console.log("loaded: " + JSON.stringify({
+                    "details_price": $(details_parsed).find("tbody>tr>td.product-price").text().trim(),
+                    "details_shipping": $(details_parsed).find("tbody>tr>td.shipping-price").text().trim(),
+                    "details_adjust": $(details_parsed).find("tbody>tr>td.change-price").text().trim(),
+                    "details_discount": $(details_parsed).find("tbody>tr>td.discount-price").text().trim(),
+                    "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
+                }));
+
+                resolve({
+                    "order_id": order_id,
+                    "details_price": $(details_parsed).find("tbody>tr>td.product-price").text().trim(),
+                    "details_shipping": $(details_parsed).find("tbody>tr>td.shipping-price").text().trim(),
+                    "details_adjust": $(details_parsed).find("tbody>tr>td.change-price").text().trim(),
+                    "details_discount": $(details_parsed).find("tbody>tr>td.discount-price").text().trim(),
+                    "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
+                });
+
+            },
+            onerror: () => reject(400),
+        });
+    });
+}
 
 // Loop through each order
 $(".order-item-wraper").each((ind, el)=>{
@@ -43,25 +79,38 @@ $(".order-item-wraper").each((ind, el)=>{
         //console.log(products);
     });
 
+    let order_id = $(el).find(".order-info .first-row .info-body ").text().trim()
+
+    // Put all requests to be called on button press
+    reqs.push(() => get_order_details(order_id));
+
     let order = {
-        id: $(el).find(".order-info .first-row .info-body ").text().trim(),
+        id: order_id,
         status: $(el).find(".order-status .f-left").text().trim(),
         order_price: $(el).find(".amount-num").text().trim(),
 	    order_date: $(el).find(".order-info .second-row .info-body").text().trim(),
 	    seller_name: $(el).find(".store-info .first-row .info-body").text().trim(),
         has_tracking: has_tracking,
         products: products,
+        details: "fetching",
     };
 
     orders.push(order);
 });
 
-function printHeader() {
+
+
+function print_header() {
     var header = "";
 
     header += "Order ID\t";
     header += "Order Status\t";
     header += "Order Price\t";
+    header += "Details Price\t";
+    header += "Details Shipping\t";
+    header += "Details Adjust\t";
+    header += "Details Discount\t";
+    header += "Details Total\t";
     header += "Order Date\t";
     header += "Seller Name\t";
     header += "Has Tracking\t";
@@ -77,37 +126,61 @@ function printHeader() {
     return header;
 }
 
+function clean(dirtystr) {
+    return dirtystr.toString().replace(/[\t\n\r]/gm,'');
+}
+
 $('<button/>', {
     text: "LOAD",
     id: 'csvBtn',
     click: function () {
         $("#csvBtn").text("Loading...");
-        var s = "";
+        var s = print_header();
+        var order_detail;
 
-        s += printHeader();
+        console.log("CLICK");
 
-        orders.forEach(order=> {
+        const detail_tasks = reqs.map(task => task());
 
-            order.products.forEach(product => {
-                s += order.id + "\t";
-                s += order.status + "\t";
-                s += order.order_price + "\t";
-                s += order.order_date + "\t";
-                s += order.seller_name + "\t";
-                s += order.has_tracking + "\t";
-                s += product.product_name + "\t";
-                s += "https:" + product.product_url + "\t";
-                s += "https:" + product.product_snapshot + "\t";
-                s += product.product_price + "\t";
-                s += product.product_quantity + "\t";
-                s += product.product_num + "\t";
-                s += "\n";
-            })
+        return Promise.all(detail_tasks).then(result => {
+            console.log("all requests: " + result);
+
+            orders.forEach(order=> {
+
+                result.forEach(detail => {
+                    if (detail.order_id == order.id) {
+                        order_detail = detail;
+                    }
+                });
+
+                order.products.forEach(product => {
+                    s += clean(order.id) + "\t";
+                    s += clean(order.status) + "\t";
+                    s += clean(order.order_price) + "\t";
+                    s += clean(order_detail.details_price) + "\t";
+                    s += clean(order_detail.details_shipping) + "\t";
+                    s += clean(order_detail.details_adjust) + "\t";
+                    s += clean(order_detail.details_discount) + "\t";
+                    s += clean(order_detail.details_total) + "\t";
+                    s += clean(order.order_date) + "\t";
+                    s += clean(order.seller_name) + "\t";
+                    s += clean(order.has_tracking) + "\t";
+                    s += clean(product.product_name) + "\t";
+                    s += "https:" + clean(product.product_url) + "\t";
+                    s += "https:" + clean(product.product_snapshot) + "\t";
+                    s += clean(product.product_price) + "\t";
+                    s += clean(product.product_quantity) + "\t";
+                    s += clean(product.product_num) + "\t";
+                    s += "\n";
+                })
+            });
+
+            //console.log(s);
+            GM_setClipboard(s);
+            $("#csvBtn").text("Loaded to clipboard");
+
         });
 
-        //console.log(s);
-        GM_setClipboard (s);
-        $("#csvBtn").text("Loaded to clipboard");
 
     }
 }).appendTo("#appeal-alert");

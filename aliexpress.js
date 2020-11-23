@@ -39,6 +39,7 @@ function get_order_details(order_id) {
                     "details_adjust": $(details_parsed).find("tbody>tr>td.change-price").text().trim(),
                     "details_discount": $(details_parsed).find("tbody>tr>td.discount-price").text().trim(),
                     "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
+                    "details_payments": $(details_parsed).find("table.fund-table>tbody>tr.fund-bd>td.pay-c1").text().trim(),
                 }));
 
                 resolve({
@@ -48,6 +49,7 @@ function get_order_details(order_id) {
                     "details_adjust": $(details_parsed).find("tbody>tr>td.change-price").text().trim(),
                     "details_discount": $(details_parsed).find("tbody>tr>td.discount-price").text().trim(),
                     "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
+                    "details_payments": $(details_parsed).find("table.fund-table>tbody>tr.fund-bd>td.pay-c1").text().trim(),
                 });
 
             },
@@ -111,6 +113,7 @@ function print_header() {
     header += "Details Adjust\t";
     header += "Details Discount\t";
     header += "Details Total\t";
+    header += "Details Payments\t";
     header += "Order Date\t";
     header += "Seller Name\t";
     header += "Has Tracking\t";
@@ -127,7 +130,8 @@ function print_header() {
 }
 
 function clean(dirtystr) {
-    return dirtystr.toString().replace(/[\t\n\r]/gm,'');
+    let cleanstr = dirtystr.toString().replace(/[\t\n\r]/gm,'');
+    return cleanstr.replace(/ +/gm,' ');
 }
 
 $('<button/>', {
@@ -138,13 +142,9 @@ $('<button/>', {
         var s = print_header();
         var order_detail;
 
-        console.log("CLICK");
-
         const detail_tasks = reqs.map(task => task());
 
         return Promise.all(detail_tasks).then(result => {
-            console.log("all requests: " + result);
-
             orders.forEach(order=> {
 
                 result.forEach(detail => {
@@ -162,6 +162,7 @@ $('<button/>', {
                     s += clean(order_detail.details_adjust) + "\t";
                     s += clean(order_detail.details_discount) + "\t";
                     s += clean(order_detail.details_total) + "\t";
+                    s += clean(order_detail.details_payments) + "\t";
                     s += clean(order.order_date) + "\t";
                     s += clean(order.seller_name) + "\t";
                     s += clean(order.has_tracking) + "\t";

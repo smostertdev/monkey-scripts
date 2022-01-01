@@ -20,10 +20,12 @@
 })();
 
 var orders = [];
-var reqs = [];     // hold HTTP request for order details page
+var reqs = []; // hold HTTP request for order details page
 
 var tracking_url = "https://track.aliexpress.com/logisticsdetail.htm?tradeId="
 var details_url = "https://trade.aliexpress.com/order_detail.htm?orderId="
+
+var $ = window.jQuery;
 
 // Load order details page to pull shipping cost, coupons, etc
 function get_order_details(order_id) {
@@ -31,12 +33,19 @@ function get_order_details(order_id) {
 
     return new Promise((resolve, reject) => {
         console.log("loading: " + order_id);
-        GM_xmlhttpRequest({
-            method: "GET",
-            url: details_url + order_id,
-            onload: (response) => {
 
-                details_parsed = jQuery.parseHTML(response.responseText);
+        $.ajax ( {
+            type:       'GET',
+            url:        details_url + order_id,
+            cache: false,
+            crossDomain: true,
+            xhrFields: {
+                withCredentials: true
+            },
+            success:    function (response) {
+                var details_parsed = $.parseHTML(response);
+
+                console.log("DETAILS_PARSED: " + response)
 
                 console.log("loaded: " + JSON.stringify({
                     "details_price": $(details_parsed).find("tbody>tr>td.product-price").text().trim(),
@@ -56,10 +65,9 @@ function get_order_details(order_id) {
                     "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
                     "details_payments": $(details_parsed).find("table.fund-table>tbody>tr.fund-bd>td.pay-c1").text().trim(),
                 });
+            }
+        } );
 
-            },
-            onerror: () => reject(400),
-        });
     });
 }
 
@@ -67,7 +75,7 @@ function get_order_details(order_id) {
 $(".order-item-wraper").each((ind, el)=>{
     var products = [];
     var has_tracking = $(el).find(".button-logisticsTracking ").length > 0;
-    inum = 0;
+    var inum = 0;
 
     // Retrieve each product
     $(el).find(".order-body").each((i,e)=>{
@@ -172,8 +180,8 @@ $('<button/>', {
                     s += "\"" + clean(order.seller_name) + "\"\t";
                     s += "\"" + clean(order.has_tracking) + "\"\t";
                     s += "\"" + clean(product.product_name) + "\"\t";
-                    s += "\"" + "https:" + clean(product.product_url) + "\"\t";
-                    s += "\"" + "https:" + clean(product.product_snapshot) + "\"\t";
+                    s += "\"https:" + clean(product.product_url) + "\"\t";
+                    s += "\"https:" + clean(product.product_snapshot) + "\"\t";
                     s += "\"" + clean(product.product_price) + "\"\t";
                     s += "\"" + clean(product.product_quantity) + "\"\t";
                     s += "\"" + clean(product.product_num) + "\"\t";

@@ -45,7 +45,22 @@ function get_order_details(order_id) {
             success:    function (response) {
                 var details_parsed = $.parseHTML(response);
 
-                console.log("DETAILS_PARSED: " + response)
+                var total_credit_card = ""
+                var total_coupons = ""
+
+                // Try to get the credit card payment and coupon values
+
+                $(details_parsed).find("table.fund-table#tp-buyer-order-table>tbody>tr.fund-bd").each(function() {
+                    if($(this).find('td.pay-c3:contains("redit")').length != 0) {
+                        total_credit_card = $(this).find('td.pay-c1').text().trim().replace(/CA C\$ /gm,'');
+                    }
+                    if($(this).find('td.pay-c3:contains("oupon")').length != 0) {
+                        total_coupons = $(this).find('td.pay-c1').text().trim().replace(/CA C\$ /gm,'');
+                    }
+                });
+
+
+
 
                 console.log("loaded: " + JSON.stringify({
                     "details_price": $(details_parsed).find("tbody>tr>td.product-price").text().trim(),
@@ -54,6 +69,8 @@ function get_order_details(order_id) {
                     "details_discount": $(details_parsed).find("tbody>tr>td.discount-price").text().trim(),
                     "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
                     "details_payments": $(details_parsed).find("table.fund-table>tbody>tr.fund-bd>td.pay-c1").text().trim(),
+                    "total_credit_card": total_credit_card,
+                    "total_coupons": total_coupons
                 }));
 
                 resolve({
@@ -64,6 +81,8 @@ function get_order_details(order_id) {
                     "details_discount": $(details_parsed).find("tbody>tr>td.discount-price").text().trim(),
                     "details_total": $(details_parsed).find("tbody>tr>td.order-price").text().trim(),
                     "details_payments": $(details_parsed).find("table.fund-table>tbody>tr.fund-bd>td.pay-c1").text().trim(),
+                    "total_credit_card": total_credit_card,
+                    "total_coupons": total_coupons
                 });
             }
         } );
@@ -136,6 +155,8 @@ function print_header() {
     header += "\"Pruduct Price\"\t";
     header += "\"Product Quantity\"\t";
     header += "\"Product Number\"\t";
+    header += "\"Total Credit Card\"\t";
+    header += "\"Total Coupons\"\t";
 
     header += "\n";
 
@@ -185,6 +206,8 @@ $('<button/>', {
                     s += "\"" + clean(product.product_price) + "\"\t";
                     s += "\"" + clean(product.product_quantity) + "\"\t";
                     s += "\"" + clean(product.product_num) + "\"\t";
+                    s += "\"" + clean(order_detail.total_credit_card) + "\"\t";
+                    s += "\"" + clean(order_detail.total_coupons) + "\"\t";
                     s += "\n";
                 })
             });

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aliexpress_orders
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  Export orders from aliexpress
 // @author       naixx
 // @match        https://trade.aliexpress.com/orderList.htm*
@@ -110,24 +110,24 @@ $(".order-item-wraper").each((ind, el)=>{
 function print_header() {
     var header = "";
 
-    header += "Order ID\t";
-    header += "Order Status\t";
-    header += "Order Price\t";
-    header += "Details Price\t";
-    header += "Details Shipping\t";
-    header += "Details Adjust\t";
-    header += "Details Discount\t";
-    header += "Details Total\t";
-    header += "Details Payments\t";
-    header += "Order Date\t";
-    header += "Seller Name\t";
-    header += "Has Tracking\t";
-    header += "Product Name\t";
-    header += "Product URL\t";
-    header += "Pruduct Snapshot\t";
-    header += "Pruduct Price\t";
-    header += "Product Quantity\t";
-    header += "Product Number\t";
+    header += "\"Order ID\"\t";
+    header += "\"Order Status\"\t";
+    header += "\"Order Price\"\t";
+    header += "\"Details Price\"\t";
+    header += "\"Details Shipping\"\t";
+    header += "\"Details Adjust\"\t";
+    header += "\"Details Discount\"\t";
+    header += "\"Details Total\"\t";
+    header += "\"Details Payments\"\t";
+    header += "\"Order Date\"\t";
+    header += "\"Seller Name\"\t";
+    header += "\"Has Tracking\"\t";
+    header += "\"Product Name\"\t";
+    header += "\"Product URL\"\t";
+    header += "\"Pruduct Snapshot\"\t";
+    header += "\"Pruduct Price\"\t";
+    header += "\"Product Quantity\"\t";
+    header += "\"Product Number\"\t";
 
     header += "\n";
 
@@ -135,7 +135,7 @@ function print_header() {
 }
 
 function clean(dirtystr) {
-    let cleanstr = dirtystr.toString().replace(/[\t\n\r]/gm,'');
+    let cleanstr = dirtystr.toString().replace(/[\t\n\r"]/gm,'');
     return cleanstr.replace(/ +/gm,' ');
 }
 
@@ -159,24 +159,24 @@ $('<button/>', {
                 });
 
                 order.products.forEach(product => {
-                    s += clean(order.id) + "\t";
-                    s += clean(order.status) + "\t";
-                    s += clean(order.order_price) + "\t";
-                    s += clean(order_detail.details_price) + "\t";
-                    s += clean(order_detail.details_shipping) + "\t";
-                    s += clean(order_detail.details_adjust) + "\t";
-                    s += clean(order_detail.details_discount) + "\t";
-                    s += clean(order_detail.details_total) + "\t";
-                    s += clean(order_detail.details_payments) + "\t";
-                    s += clean(order.order_date) + "\t";
-                    s += clean(order.seller_name) + "\t";
-                    s += clean(order.has_tracking) + "\t";
-                    s += clean(product.product_name) + "\t";
-                    s += "https:" + clean(product.product_url) + "\t";
-                    s += "https:" + clean(product.product_snapshot) + "\t";
-                    s += clean(product.product_price) + "\t";
-                    s += clean(product.product_quantity) + "\t";
-                    s += clean(product.product_num) + "\t";
+                    s += "\"" + clean(order.id) + "\"\t";
+                    s += "\"" + clean(order.status) + "\"\t";
+                    s += "\"" + clean(order.order_price) + "\"\t";
+                    s += "\"" + clean(order_detail.details_price) + "\"\t";
+                    s += "\"" + clean(order_detail.details_shipping) + "\"\t";
+                    s += "\"" + clean(order_detail.details_adjust) + "\"\t";
+                    s += "\"" + clean(order_detail.details_discount) + "\"\t";
+                    s += "\"" + clean(order_detail.details_total) + "\"\t";
+                    s += "\"" + clean(order_detail.details_payments) + "\"\t";
+                    s += "\"" + clean(order.order_date) + "\"\t";
+                    s += "\"" + clean(order.seller_name) + "\"\t";
+                    s += "\"" + clean(order.has_tracking) + "\"\t";
+                    s += "\"" + clean(product.product_name) + "\"\t";
+                    s += "\"" + "https:" + clean(product.product_url) + "\"\t";
+                    s += "\"" + "https:" + clean(product.product_snapshot) + "\"\t";
+                    s += "\"" + clean(product.product_price) + "\"\t";
+                    s += "\"" + clean(product.product_quantity) + "\"\t";
+                    s += "\"" + clean(product.product_num) + "\"\t";
                     s += "\n";
                 })
             });

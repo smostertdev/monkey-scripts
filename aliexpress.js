@@ -157,6 +157,7 @@ function print_header() {
     header += "\"Product Number\"\t";
     header += "\"Total Credit Card\"\t";
     header += "\"Total Coupons\"\t";
+    header += "\"Price after savings\"\t";
 
     header += "\n";
 
@@ -166,6 +167,33 @@ function print_header() {
 function clean(dirtystr) {
     let cleanstr = dirtystr.toString().replace(/[\t\n\r"]/gm,'');
     return cleanstr.replace(/ +/gm,' ');
+}
+
+function cleanPrice(dirtystr) {
+    var cleanstr = parseFloat(dirtystr.toString().replace(/[^0-9.]/gm,''));
+    return cleanstr ? cleanstr : 0
+}
+
+function cleanDiscount(dirtystr) {
+    /*
+    String like:
+        "Seller coupons
+        CA C$ 13.04
+        Order Price Discount
+        CA C$ 6.52"
+    Should be:
+        19.56
+    */
+    var cleanstr = dirtystr.toString().replace(/[^0-9.\n]/gm,'').split(/\r?\n/).reduce(function(a, b) {
+        return parseFloat(a) + parseFloat(b);
+      }, 0);
+    return cleanstr ? cleanstr : 0;
+}
+
+function round_money(num) {
+    var cleanstr = parseFloat(num).toFixed(2);
+    console.log("rounding: " + num + " to: " + cleanstr);
+    return cleanstr ? parseFloat(cleanstr) : 0
 }
 
 $('<button/>', {
@@ -188,26 +216,36 @@ $('<button/>', {
                 });
 
                 order.products.forEach(product => {
+                    // total value of the order
+                    var total_order_value = (cleanPrice(order_detail.details_price) + cleanPrice(order_detail.details_shipping));
+                    var total_savings = (cleanDiscount(order_detail.details_discount) + parseFloat(order_detail.total_coupons));
+                    var prorated_shipping = round_money((cleanPrice(order_detail.details_shipping) / cleanPrice(order_detail.details_price)) * cleanPrice(product.product_price));
+
+                    var prorated_savings = (total_savings / (cleanPrice(order_detail.details_price) + cleanPrice(order_detail.details_shipping))) * (cleanPrice(product.product_price) + prorated_shipping)
+
                     s += "\"" + clean(order.id) + "\"\t";
                     s += "\"" + clean(order.status) + "\"\t";
-                    s += "\"" + clean(order.order_price) + "\"\t";
-                    s += "\"" + clean(order_detail.details_price) + "\"\t";
-                    s += "\"" + clean(order_detail.details_shipping) + "\"\t";
-                    s += "\"" + clean(order_detail.details_adjust) + "\"\t";
+                    s += "\"" + clean(cleanPrice(order.order_price)) + "\"\t";
+                    s += "\"" + clean(cleanPrice(order_detail.details_price)) + "\"\t";
+                    s += "\"" + clean(cleanPrice(order_detail.details_shipping)) + "\"\t";
+                    s += "\"" + clean(cleanPrice(order_detail.details_adjust)) + "\"\t";
                     s += "\"" + clean(order_detail.details_discount) + "\"\t";
-                    s += "\"" + clean(order_detail.details_total) + "\"\t";
-                    s += "\"" + clean(order_detail.details_payments) + "\"\t";
+                    s += "\"" + clean(cleanPrice(order_detail.details_total)) + "\"\t";
+                    s += "\"" + clean(cleanPrice(order_detail.details_payments)) + "\"\t";
                     s += "\"" + clean(order.order_date) + "\"\t";
                     s += "\"" + clean(order.seller_name) + "\"\t";
                     s += "\"" + clean(order.has_tracking) + "\"\t";
                     s += "\"" + clean(product.product_name) + "\"\t";
                     s += "\"https:" + clean(product.product_url) + "\"\t";
                     s += "\"https:" + clean(product.product_snapshot) + "\"\t";
-                    s += "\"" + clean(product.product_price) + "\"\t";
+                    s += "\"" + clean(cleanPrice(product.product_price)) + "\"\t";
                     s += "\"" + clean(product.product_quantity) + "\"\t";
                     s += "\"" + clean(product.product_num) + "\"\t";
                     s += "\"" + clean(order_detail.total_credit_card) + "\"\t";
                     s += "\"" + clean(order_detail.total_coupons) + "\"\t";
+
+                    s += "\"" + clean( round_money(cleanPrice(product.product_price) - prorated_savings) ) + "\"\t";
+
                     s += "\n";
                 })
             });

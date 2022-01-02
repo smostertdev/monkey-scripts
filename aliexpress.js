@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Aliexpress_orders
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @description  Export orders from aliexpress
 // @author       naixx
-// @match        https://trade.aliexpress.com/orderList.htm*
+// @match        https://trade.aliexpress.com/order*
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
@@ -44,8 +44,8 @@ function get_order_details(order_id) {
       success: function (response) {
         var details_parsed = $.parseHTML(response);
 
-        var total_credit_card = "";
-        var total_coupons = "";
+        var total_credit_card = "0";
+        var total_coupons = "0";
 
         // Try to get the credit card payment and coupon values
 

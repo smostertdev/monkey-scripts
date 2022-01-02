@@ -255,9 +255,26 @@ function round_money(num) {
   return cleanstr ? parseFloat(cleanstr) : 0;
 }
 
-$("<button/>", {
+$("<a/>", {
   text: "LOAD",
   id: "csvBtn",
+  css: {
+    display: "inline-block",
+    padding: "0.7em 1.7em",
+    margin: "0 0.3em 0.3em 0",
+    "border-radius": "0.2em",
+    "box-sizing": "border-box",
+    "text-decoration": "none",
+    "font-family": "'Roboto',sans-serif",
+    "font-weight": "800",
+    color: "#FFFFFF",
+    "background-color": "#e62d03",
+    "box-shadow":
+      "inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12)",
+    "text-align": "center",
+    position: "relative",
+    cursor: "pointer",
+  },
   click: function () {
     $("#csvBtn").text("Loading...");
     var s = print_header();
@@ -330,4 +347,11 @@ $("<button/>", {
       $("#csvBtn").text("Loaded to clipboard");
     });
   },
-}).appendTo("#appeal-alert");
+})
+  .hover(function () {
+    $(this).css("background-color", "#fd8f76");
+  })
+  .mouseout(function () {
+    $(this).css({ "background-color": "#e62d03" });
+  })
+  .appendTo("#appeal-alert");
